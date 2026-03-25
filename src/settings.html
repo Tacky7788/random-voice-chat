@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Voice Chat 設定</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'M PLUS 1', 'Segoe UI', sans-serif;
+      background: #0c0c0f;
+      color: #e8e8ec;
+      padding: 28px 32px 48px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+      color: #f0f0f4;
+    }
+
+    .panel {
+      background: #16161b;
+      border: 1px solid #28282f;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .panel-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6e6e80;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 0;
+      border-bottom: 1px solid #1e1e26;
+    }
+    .field:last-child { border-bottom: none; }
+
+    .field-name {
+      font-size: 13px;
+      color: #b0b0be;
+      font-weight: 500;
+    }
+
+    .field-right { display: flex; align-items: center; gap: 8px; }
+
+    input[type="checkbox"] {
+      width: 17px; height: 17px;
+      accent-color: #5a6aff;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      width: 110px;
+      accent-color: #5a6aff;
+      cursor: pointer;
+    }
+
+    .val {
+      font-size: 12px;
+      color: #7a7a8e;
+      min-width: 32px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+    }
+
+    .btn-s {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      background: #1e1e28;
+      color: #8888a0;
+      border: 1px solid #2e2e3a;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .btn-s:hover { background: #28283a; color: #c0c0d0; }
+    .btn-s.active { background: #5a6aff; color: #fff; border-color: #5a6aff; }
+
+    /* ---- キャラ選択 ---- */
+    .char-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .char-toolbar .search {
+      flex: 1;
+      background: #1e1e28;
+      border: 1px solid #2e2e3a;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 13px;
+      color: #e0e0ea;
+      font-family: inherit;
+      outline: none;
+    }
+    .char-toolbar .search::placeholder { color: #4a4a5e; }
+    .char-toolbar .search:focus { border-color: #5a6aff; }
+
+    .filter-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .filter-label {
+      font-size: 11px;
+      color: #5a5a6e;
+      font-weight: 600;
+      margin-right: 2px;
+    }
+
+    .char-scroll {
+      max-height: 56vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .char-scroll::-webkit-scrollbar { width: 6px; }
+    .char-scroll::-webkit-scrollbar-track { background: transparent; }
+    .char-scroll::-webkit-scrollbar-thumb { background: #2e2e3a; border-radius: 3px; }
+
+    .char-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .ccard {
+      position: relative;
+      background: #1a1a22;
+      border: 1.5px solid #26262e;
+      border-radius: 8px;
+      padding: 10px 11px;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.12s, background 0.12s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-height: 42px;
+      justify-content: center;
+    }
+
+    .ccard:hover { background: #1e1e2a; border-color: #3a3a4a; }
+    .ccard.on { border-color: #5a6aff; background: #1c1c30; }
+    .ccard.partial { border-color: #5a6aff55; background: #1a1a28; }
+
+    .ccard-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #d8d8e4;
+      line-clamp: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ccard.on .ccard-name { color: #fff; }
+
+    .ccard-badge {
+      font-size: 10px;
+      color: #5a5a6e;
+      font-weight: 500;
+    }
+
+    /* エンジンバッジ */
+    .engine-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      align-self: flex-start;
+    }
+    .engine-badge.voicevox {
+      background: #1a2840;
+      color: #4a8fff;
+      border: 1px solid #2a4060;
+    }
+    .engine-badge.coeiroink {
+      background: #281a40;
+      color: #c070ff;
+      border: 1px solid #442a60;
+    }
+
+    .ccard-check {
+      position: absolute;
+      top: 6px;
+      right: 7px;
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background: #26262e;
+      border: 1.5px solid #3a3a48;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: transparent;
+      transition: all 0.1s;
+      cursor: pointer;
+    }
+
+    .ccard-check:hover { border-color: #5a6aff; }
+
+    .ccard.on > .ccard-check {
+      background: #5a6aff;
+      border-color: #5a6aff;
+      color: #fff;
+    }
+
+    .ccard.partial > .ccard-check {
+      background: #3a3a60;
+      border-color: #5a6aff88;
+      color: #aaa;
+    }
+
+    /* 展開パネル */
+    .ccard-expand {
+      grid-column: 1 / -1;
+      background: #141418;
+      border: 1px solid #28282f;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .style-chip {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      background: #1e1e28;
+      border: 1.5px solid #2a2a36;
+      border-radius: 20px;
+      cursor: pointer;
+      color: #9898aa;
+      transition: all 0.1s;
+      user-select: none;
+    }
+
+    .style-chip:hover { border-color: #4a4a5a; color: #c0c0d0; }
+    .style-chip.on { background: #282848; border-color: #5a6aff; color: #c8c8ff; }
+
+    .hint {
+      font-size: 11px;
+      color: #4a4a5e;
+      margin-top: 10px;
+    }
+
+    /* ---- フッター ---- */
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .btn-main {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 32px;
+      background: #5a6aff;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.1s;
+    }
+    .btn-main:hover { background: #6a7aff; }
+    .btn-main:disabled { background: #2e2e3a; color: #5a5a6e; cursor: not-allowed; }
+
+    .fb { font-size: 12px; opacity: 0; transition: opacity 0.15s; }
+    .fb.ok { color: #4caf50; }
+    .fb.err { color: #f44; }
+    .fb.show { opacity: 1; }
+
+    .loading { text-align: center; color: #4a4a5e; padding: 40px 0; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>Random Voice Chat</h1>
+
+  <div class="panel">
+    <div class="panel-label">基本設定</div>
+    <div class="field">
+      <span class="field-name">読み上げ有効</span>
+      <input type="checkbox" id="enabled">
+    </div>
+    <div class="field">
+      <span class="field-name">同じユーザーは同じ声</span>
+      <input type="checkbox" id="sameVoice">
+    </div>
+    <div class="field">
+      <span class="field-name">速度</span>
+      <div class="field-right">
+        <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.2">
+        <span class="val" id="speedVal">1.2x</span>
+      </div>
+    </div>
+    <div class="field">
+      <span class="field-name">ボリューム</span>
+      <div class="field-right">
+        <input type="range" id="volume" min="0" max="2.0" step="0.1" value="1.0">
+        <span class="val" id="volVal">1.0</span>
+      </div>
+    </div>
+    <div class="field">
+      <span class="field-name">ピッチ</span>
+      <div class="field-right">
+        <input type="range" id="pitch" min="-0.15" max="0.15" step="0.01" value="0">
+        <span class="val" id="pitchVal">0.00</span>
+      </div>
+    </div>
+    <div class="field">
+      <span class="field-name">イントネーション</span>
+      <div class="field-right">
+        <input type="range" id="intonation" min="0" max="2.0" step="0.1" value="1.0">
+        <span class="val" id="intoVal">1.0</span>
+      </div>
+    </div>
+    <div class="field">
+      <span class="field-name">最大文字数</span>
+      <div class="field-right">
+        <input type="range" id="maxLen" min="10" max="500" step="10" value="100">
+        <span class="val" id="maxLenDisplay">100</span>
+        <button class="btn-s" id="noLimit">制限なし</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">キャラ選択</div>
+    <div class="char-toolbar">
+      <input class="search" type="text" id="search" placeholder="キャラを検索...">
+      <button class="btn-s" id="selAll">全選択</button>
+      <button class="btn-s" id="selNone">全解除</button>
+    </div>
+    <div class="filter-toolbar">
+      <span class="filter-label">エンジン:</span>
+      <button class="btn-s active" id="filterAll" data-filter="all">全部</button>
+      <button class="btn-s" id="filterVoicevox" data-filter="voicevox">VOICEVOX</button>
+      <button class="btn-s" id="filterCoeiroink" data-filter="coeiroink">COEIROINK</button>
+    </div>
+    <div class="char-scroll">
+      <div class="char-cards" id="charList">
+        <div class="loading">読み込み中...</div>
+      </div>
+    </div>
+    <p class="hint">未選択 = 全キャラからランダム / カードクリックで選択 / 複数スタイルはクリックで展開</p>
+  </div>
+
+  <div class="bar">
+    <button class="btn-main" id="saveBtn">保存</button>
+    <span class="fb ok" id="msgOk">保存しました</span>
+    <span class="fb err" id="msgErr"></span>
+  </div>
+
+<script>
+const API = 'http://localhost:11180/api/plugins/com.rippy.random-voice-chat'
+let speakers = [], cfg = {}, expandedUid = null
+let activeFilter = 'all'
+
+// --- sliders ---
+const sliders = [
+  ['speed',      'speedVal',  v => v.toFixed(1) + 'x'],
+  ['volume',     'volVal',    v => v.toFixed(1)],
+  ['pitch',      'pitchVal',  v => v.toFixed(2)],
+  ['intonation', 'intoVal',   v => v.toFixed(1)]
+]
+sliders.forEach(([id, vid, fmt]) => {
+  document.getElementById(id).addEventListener('input', e => {
+    document.getElementById(vid).textContent = fmt(parseFloat(e.target.value))
+  })
+})
+
+// --- max length ---
+let maxLenUnlimited = false
+document.getElementById('maxLen').addEventListener('input', e => {
+  maxLenUnlimited = false
+  document.getElementById('maxLenDisplay').textContent = e.target.value
+  document.getElementById('noLimit').classList.remove('active')
+})
+document.getElementById('noLimit').onclick = () => {
+  maxLenUnlimited = !maxLenUnlimited
+  document.getElementById('noLimit').classList.toggle('active', maxLenUnlimited)
+  document.getElementById('maxLenDisplay').textContent = maxLenUnlimited
+    ? '\u221E'
+    : document.getElementById('maxLen').value
+}
+
+// --- select all / none ---
+document.getElementById('selAll').onclick = () => {
+  document.querySelectorAll('.scb').forEach(c => {
+    const card = c.closest('.ccard')
+    if (!card || card.style.display === 'none') return
+    c.checked = true
+  })
+  refreshCards()
+}
+document.getElementById('selNone').onclick = () => {
+  document.querySelectorAll('.scb').forEach(c => {
+    const card = c.closest('.ccard')
+    if (!card || card.style.display === 'none') return
+    c.checked = false
+  })
+  refreshCards()
+}
+
+// --- engine filter ---
+document.querySelectorAll('[data-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeFilter = btn.dataset.filter
+    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    applyFilters()
+  })
+})
+
+// --- search ---
+document.getElementById('search').addEventListener('input', applyFilters)
+
+function applyFilters() {
+  const q = document.getElementById('search').value.toLowerCase()
+  document.querySelectorAll('.ccard').forEach(el => {
+    const name = el.dataset.name || ''
+    const engine = el.dataset.engine || ''
+    const matchSearch = name.includes(q)
+    const matchEngine = activeFilter === 'all' ||
+      (activeFilter === 'voicevox' && engine === '0') ||
+      (activeFilter === 'coeiroink' && engine === '1')
+    el.style.display = (matchSearch && matchEngine) ? '' : 'none'
+  })
+  // expand パネルは親カードが非表示なら非表示
+  document.querySelectorAll('.ccard-expand').forEach(panel => {
+    const idx = panel.dataset.forIdx
+    const parentCard = document.querySelector(`.ccard[data-idx="${idx}"]`)
+    if (parentCard && parentCard.style.display === 'none') {
+      panel.style.display = 'none'
+    } else {
+      panel.style.display = ''
+    }
+  })
+}
+
+function engineLabel(engineIndex) {
+  // engines配列の順序に基づく: 0=VOICEVOX, 1=COEIROINK
+  // 将来的にconfig.enginesから動的に取得可能だが、今はインデックスで判定
+  if (engineIndex === '0') return 'VOICEVOX'
+  if (engineIndex === '1') return 'COEIROINK'
+  return `ENGINE ${engineIndex}`
+}
+
+function engineBadgeClass(engineIndex) {
+  if (engineIndex === '0') return 'voicevox'
+  if (engineIndex === '1') return 'coeiroink'
+  return ''
+}
+
+// --- render ---
+function render(speakers, sel) {
+  const grid = document.getElementById('charList')
+  grid.innerHTML = ''
+  expandedUid = null
+
+  speakers.forEach((sp, idx) => {
+    const card = document.createElement('div')
+    card.className = 'ccard'
+    card.dataset.idx = idx
+    card.dataset.name = sp.name.toLowerCase()
+    card.dataset.engine = sp.engine || '0'
+
+    // エンジンバッジ
+    const badge = document.createElement('div')
+    badge.className = `engine-badge ${engineBadgeClass(sp.engine || '0')}`
+    badge.textContent = engineLabel(sp.engine || '0')
+    card.appendChild(badge)
+
+    const nameEl = document.createElement('div')
+    nameEl.className = 'ccard-name'
+    nameEl.textContent = sp.name
+
+    const check = document.createElement('div')
+    check.className = 'ccard-check'
+    check.textContent = '\u2713'
+
+    card.appendChild(nameEl)
+    card.appendChild(check)
+
+    if (sp.styles.length > 1) {
+      const styleBadge = document.createElement('div')
+      styleBadge.className = 'ccard-badge'
+      styleBadge.textContent = sp.styles.length + ' styles'
+      card.appendChild(styleBadge)
+    }
+
+    // hidden checkboxes for data
+    // data-id は "engine_index:speaker_id" 形式
+    sp.styles.forEach(st => {
+      const cb = document.createElement('input')
+      cb.type = 'checkbox'
+      cb.className = 'scb'
+      const compositeId = `${sp.engine || '0'}:${st.id}`
+      cb.dataset.id = compositeId
+      cb.checked = sel.includes(compositeId)
+      cb.style.display = 'none'
+      card.appendChild(cb)
+    })
+
+    updateCardState(card)
+
+    // チェックマーク → 全スタイルON/OFF
+    check.addEventListener('click', e => {
+      e.stopPropagation()
+      const cbs = card.querySelectorAll('.scb')
+      const allOn = [...cbs].every(c => c.checked)
+      cbs.forEach(c => c.checked = !allOn)
+      updateCardState(card)
+      const panel = grid.querySelector(`.ccard-expand[data-for-idx="${idx}"]`)
+      if (panel) panel.querySelectorAll('.style-chip').forEach(chip => {
+        chip.classList.toggle('on', !allOn)
+      })
+    })
+
+    // カード本体 → 単一はトグル、複数は展開
+    card.addEventListener('click', () => {
+      if (sp.styles.length === 1) {
+        const cb = card.querySelector('.scb')
+        cb.checked = !cb.checked
+        updateCardState(card)
+      } else {
+        toggleExpand(card, sp, idx)
+      }
+    })
+
+    grid.appendChild(card)
+  })
+
+  applyFilters()
+}
+
+function updateCardState(card) {
+  const cbs = card.querySelectorAll('.scb')
+  const total = cbs.length
+  const checked = [...cbs].filter(c => c.checked).length
+  card.classList.toggle('on', checked === total && total > 0)
+  card.classList.toggle('partial', checked > 0 && checked < total)
+}
+
+function refreshCards() {
+  document.querySelectorAll('.ccard').forEach(updateCardState)
+}
+
+function toggleExpand(card, sp, idx) {
+  const grid = document.getElementById('charList')
+  const existing = grid.querySelector('.ccard-expand')
+
+  if (existing) {
+    const wasIdx = existing.dataset.forIdx
+    existing.remove()
+    if (wasIdx == idx) { expandedUid = null; return }
+  }
+
+  expandedUid = idx
+  const panel = document.createElement('div')
+  panel.className = 'ccard-expand'
+  panel.dataset.forIdx = idx
+
+  sp.styles.forEach(st => {
+    const chip = document.createElement('div')
+    chip.className = 'style-chip'
+    chip.textContent = st.name
+    const compositeId = `${sp.engine || '0'}:${st.id}`
+    chip.dataset.id = compositeId
+
+    const cb = card.querySelector(`.scb[data-id="${compositeId}"]`)
+    if (cb && cb.checked) chip.classList.add('on')
+
+    chip.addEventListener('click', e => {
+      e.stopPropagation()
+      cb.checked = !cb.checked
+      chip.classList.toggle('on', cb.checked)
+      updateCardState(card)
+    })
+
+    panel.appendChild(chip)
+  })
+
+  card.after(panel)
+}
+
+// --- flash ---
+function flash(type, msg) {
+  const ok = document.getElementById('msgOk')
+  const err = document.getElementById('msgErr')
+  ok.classList.remove('show'); err.classList.remove('show')
+  if (type === 'ok') {
+    ok.classList.add('show')
+    setTimeout(() => ok.classList.remove('show'), 2000)
+  } else {
+    err.textContent = msg
+    err.classList.add('show')
+    setTimeout(() => err.classList.remove('show'), 3000)
+  }
+}
+
+// --- load ---
+async function load() {
+  try {
+    const res = await fetch(API)
+    if (!res.ok) throw new Error(res.status)
+    const w = await res.json()
+    const d = typeof w.response === 'string' ? JSON.parse(w.response) : w
+    cfg = d.config
+    speakers = d.speakers || []
+
+    document.getElementById('enabled').checked = cfg.enabled !== false
+    document.getElementById('sameVoice').checked = !!cfg.sameVoicePerUser
+    sliders.forEach(([id, vid, fmt]) => {
+      const key = id === 'speed' ? 'speed' : id
+      const val = cfg[key] ?? parseFloat(document.getElementById(id).value)
+      document.getElementById(id).value = val
+      document.getElementById(vid).textContent = fmt(val)
+    })
+    if (cfg.maxLength === 0) {
+      maxLenUnlimited = true
+      document.getElementById('maxLenDisplay').textContent = '\u221E'
+      document.getElementById('noLimit').classList.add('active')
+      document.getElementById('maxLen').value = 100
+    } else {
+      document.getElementById('maxLen').value = cfg.maxLength ?? 100
+      document.getElementById('maxLenDisplay').textContent = cfg.maxLength ?? 100
+    }
+    render(speakers, cfg.speakers || [])
+  } catch (e) {
+    document.getElementById('charList').innerHTML =
+      '<div class="loading" style="color:#f44">取得失敗。わんコメとVOICEVOX/COEIROINKを起動してリロード。</div>'
+  }
+}
+
+// --- save ---
+document.getElementById('saveBtn').onclick = async () => {
+  const btn = document.getElementById('saveBtn')
+  btn.disabled = true
+  // "engine_index:speaker_id" 形式で収集
+  const ids = [...document.querySelectorAll('.scb')]
+    .filter(c => c.checked).map(c => c.dataset.id)
+  const next = {
+    engines: cfg.engines || [
+      { url: 'http://127.0.0.1:50021', enabled: true, apiPrefix: '' },
+      { url: 'http://127.0.0.1:50032', enabled: true, apiPrefix: '/v1' }
+    ],
+    enabled: document.getElementById('enabled').checked,
+    speakers: ids,
+    sameVoicePerUser: document.getElementById('sameVoice').checked,
+    speed: parseFloat(document.getElementById('speed').value),
+    volume: parseFloat(document.getElementById('volume').value),
+    pitch: parseFloat(document.getElementById('pitch').value),
+    intonation: parseFloat(document.getElementById('intonation').value),
+    maxLength: maxLenUnlimited ? 0 : parseInt(document.getElementById('maxLen').value)
+  }
+  try {
+    const r = await fetch(API, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(next)
+    })
+    if (!r.ok) throw new Error(r.status)
+    cfg = next
+    flash('ok')
+  } catch (e) { flash('err', '保存失敗') }
+  finally { btn.disabled = false }
+}
+
+load()
+</script>
+</body>
+</html>
