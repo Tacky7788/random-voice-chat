@@ -291,12 +291,12 @@ function enqueue(text: string, choice: SpeakerChoice): void {
 
 const plugin: OnePlugin = {
   name: 'Random Voice Chat',
-  uid: 'com.rippy.random-voice-chat',
+  uid: 'com.tacky.random-voice-chat',
   version: '0.0.1',
-  author: 'rippy',
+  author: 'Tacky7788',
   permissions: ['filter.speech'],
   defaultState: {},
-  url: 'http://localhost:11180/plugins/com.rippy.random-voice-chat/index.html',
+  url: 'http://localhost:11180/plugins/com.tacky.random-voice-chat/index.html',
 
   init({ dir, store }, initialData) {
     loadConfig(dir)
